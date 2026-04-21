@@ -1,15 +1,19 @@
-name: Build & Release
+﻿name: Build & Release
 
 on:
   push:
     tags:
-      - 'v*'          # triggers on v1.0.0, v1.2.3, etc.
-  workflow_dispatch:  # manual trigger from GitHub UI
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build-windows:
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
+
+    defaults:
+      run:
+        working-directory: "Hermes Mission Control"
 
     steps:
       - name: Checkout
@@ -19,30 +23,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Build (electron-vite)
         run: npm run build
 
-      - name: Package (electron-builder)
+      - name: Package & Publish
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run dist:win
+        run: |
+          if ("${{ github.ref }}" -like "refs/tags/*") {
+            npm run dist:win -- --publish always
+          } else {
+            npm run dist:win -- --publish never
+          }
 
-      - name: Upload artifacts
+      - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-installer
           path: |
-            dist/*.exe
-            dist/*.yml
+            Hermes Mission Control/dist/*.exe
+            Hermes Mission Control/dist/*.yml
           if-no-files-found: warn
-
-      - name: Publish to GitHub Releases
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run dist:win -- --publish always
