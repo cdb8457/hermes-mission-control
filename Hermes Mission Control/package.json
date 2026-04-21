@@ -89,7 +89,7 @@
     ],
     "publish": {
       "provider": "github",
-      "owner": "clint",
+      "owner": "cdb8457",
       "repo": "hermes-mission-control"
     }
   }
