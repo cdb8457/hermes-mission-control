@@ -25,7 +25,12 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --ignore-scripts
+
+      - name: Run postinstall scripts
+        run: |
+          node node_modules/electron/install.js
+          node node_modules/esbuild/install.js
 
       - name: Build (electron-vite)
         run: npm run build
